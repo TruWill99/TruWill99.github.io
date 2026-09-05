@@ -1,0 +1,90 @@
+---
+const props = {
+  tagline: 'Computer Science | Game Development',
+  description: 'I build games, engines, and creative systems — exploring the intersection of graphics programming, simulation, and interactive experiences.',
+  teaser: 'Interested in game development or creative coding? Let\'s build something.',
+  githubUsername: 'TruWill99',
+  email: 'me [at] yourdomain (dot) dev',
+};
+---
+
+<header class="header" aria-label="Site header">
+  <div class="header__content">
+    <p class="header__tagline">{props.tagline}</p>
+    <p class="header__description">{props.description}</p>
+    <p class="header__teaser">{props.teaser}</p>
+    <p class="header__meta">
+      <a class="link" href={`https://github.com/${props.githubUsername}`} target="_blank" rel="external noreferrer">
+        github: <span class="link__mono"><strong class="highlight">@{props.githubUsername}</strong></span>
+      </a>
+      <br />
+      <button class="link email-btn">
+        email: <span class="link__mono"><strong class="highlight">{props.email}</strong></span>
+      </button>
+    </p>
+  </div>
+</header>
+
+<style>
+  .header {
+    padding: 3rem 0 2rem 0;
+    text-align: center;
+  }
+
+  .header__tagline,
+  .header__description,
+  .header__teaser,
+  .header__meta,
+  .link,
+  .link__mono,
+  .highlight,
+  .email-btn {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+  }
+
+  .header__tagline {
+    color: var(--text-accent);
+    font-weight: 500;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+  .header__description {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto 0.5rem auto;
+  }
+  .header__teaser {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+  .header__meta {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    line-height: 1.8;
+  }
+  .link {
+    color: var(--text-muted);
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font: inherit;
+  }
+  .link:hover {
+    color: var(--text-accent);
+  }
+  .link__mono {
+    font-family: 'JetBrains Mono Variable', monospace;
+  }
+  .highlight {
+    color: var(--text-accent);
+  }
+  .email-btn {
+    background: none;
+    border: none;
+    font: inherit;
+    cursor: pointer;
+  }
+</style>

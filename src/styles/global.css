@@ -1,0 +1,204 @@
+/* src/styles/global.css */
+
+/* ---- Font Source (Astro Font Provider) ---- */
+/* Astro will inject the font CSS automatically via the fonts config */
+/* The font-family is available as var(--font-jetbrains) */
+
+/* ---- Tokyo Night Palette ---- */
+:root {
+  /* Core colors */
+  --tokyo-bg: #1a1b26;
+  --tokyo-bg-storm: #24283b;
+  --tokyo-fg: #c0caf5;
+  --tokyo-fg-dark: #a9b1d6;
+  --tokyo-comment: #565f89;
+  --tokyo-blue: #7aa2f7;
+  --tokyo-cyan: #7dcfff;
+  --tokyo-green: #9ece6a;
+  --tokyo-magenta: #bb9af7;
+  --tokyo-purple: #9d7cd8;
+  --tokyo-orange: #ff9e64;
+  --tokyo-yellow: #e0af68;
+  --tokyo-red: #f7768e;
+  --tokyo-teal: #1abc9c;
+
+  /* Semantic colors (change these to switch accent) */
+  --accent-primary: var(--tokyo-magenta);    /* Choose: teal, magenta, blue, green, orange, etc. */
+  --accent-hover: var(--tokyo-purple);       /* Slightly darker for hover */
+  --accent-subtle: rgba(187, 154, 247, 0.7); /* Same color with opacity */
+
+  /* Background and text */
+  --bg-body: var(--tokyo-bg);
+  --bg-card: var(--tokyo-bg-storm);
+  --text-primary: var(--tokyo-fg);
+  --text-secondary: var(--tokyo-fg-dark);
+  --text-muted: var(--tokyo-comment);
+  --text-accent: var(--accent-primary);
+  --border-color: var(--tokyo-bg-storm);
+
+  /* Dot colors (if using macOS-style) */
+  --dot-red: var(--tokyo-red);
+  --dot-yellow: var(--tokyo-orange);
+  --dot-green: var(--tokyo-green);
+}
+
+/* ---- Global Reset ---- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ---- Body ---- */
+body {
+  background: var(--bg-body);
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ---- Headings ---- */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+}
+
+/* ---- Links ---- */
+a {
+  color: var(--tokyo-blue);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--tokyo-cyan);
+  text-decoration: underline;
+}
+
+/* ---- Page Layout ---- */
+.page {
+  position: relative;
+}
+
+.shell {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ---- Grid (for projects) ---- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+/* ---- Section ---- */
+.section {
+  margin-top: 2rem;
+}
+
+/* ---- Text Colors (Tokyo Night mapped) ---- */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-accent { color: var(--text-accent); }
+.text-blue { color: var(--tokyo-blue); }
+.text-cyan { color: var(--tokyo-cyan); }
+.text-green { color: var(--tokyo-green); }
+.text-magenta { color: var(--tokyo-magenta); }
+.text-purple { color: var(--tokyo-purple); }
+.text-orange { color: var(--tokyo-orange); }
+.text-yellow { color: var(--tokyo-yellow); }
+.text-red { color: var(--tokyo-red); }
+.text-teal { color: var(--tokyo-teal); }
+
+/* ---- Background Colors (Tokyo Night mapped) ---- */
+.bg-tokyo { background-color: var(--tokyo-bg); }
+.bg-storm { background-color: var(--tokyo-bg-storm); }
+.bg-card { background-color: var(--bg-card); }
+.bg-accent { background-color: var(--text-accent); }
+
+/* ---- Utility: Underline offset ---- */
+.underline-offset-4 { text-underline-offset: 4px; }
+
+/* ---- Utility: Grid column spans ---- */
+.col-span-1 { grid-column: span 1; }
+@media (min-width: 768px) {
+  .md\:col-span-2 { grid-column: span 2; }
+}
+@media (min-width: 1280px) {
+  .xl\:col-span-3 { grid-column: span 3; }
+}
+
+/* ---- Flex utilities ---- */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.items-baseline { align-items: baseline; }
+.items-center { align-items: center; }
+.gap-1 { gap: 0.25rem; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 0.75rem; }
+
+/* ---- Spacing utilities ---- */
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 0.75rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.p-4 { padding: 1rem; }
+.p-5 { padding: 1.25rem; }
+.px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+@media (min-width: 768px) {
+  .md\:px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+  .md\:py-5 { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+}
+
+/* ---- Text size utilities ---- */
+.text-xs { font-size: 0.7rem; }
+.text-sm { font-size: 0.85rem; }
+.text-base { font-size: 1rem; }
+.text-lg { font-size: 1.125rem; }
+@media (min-width: 768px) {
+  .md\:text-lg { font-size: 1.125rem; }
+  .md\:text-sm { font-size: 0.85rem; }
+}
+
+/* ---- Font weight ---- */
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; }
+.font-normal { font-weight: 400; }
+
+/* ---- Text transform & letter spacing ---- */
+.uppercase { text-transform: uppercase; }
+.tracking-\[0\.14em\] { letter-spacing: 0.14em; }
+
+/* ---- Line height ---- */
+.leading-tight { line-height: 1.25; }
+.leading-relaxed { line-height: 1.6; }
+
+/* ---- Self alignment ---- */
+.self-start { align-self: flex-start; }
+@media (min-width: 768px) {
+  .md\:self-end { align-self: flex-end; }
+}
+
+/* ---- Min width & space ---- */
+.min-w-0 { min-width: 0; }
+.space-y-2 > * + * { margin-top: 0.5rem; }
+
+/* ---- Transitions ---- */
+.transition { transition: all 0.16s ease; }
+
+/* ---- Group hover effects ---- */
+.group:hover .group-hover\:text-cyan-200 {
+  color: var(--tokyo-cyan);
+}
+.group:hover .group-hover\:underline {
+  text-decoration: underline;
+}
+
+/* ---- Miscellaneous ---- */
+.no-underline { text-decoration: none; }
+.inline-flex { display: inline-flex; }
+[aria-hidden="true"] { user-select: none; }

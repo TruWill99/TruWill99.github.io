@@ -1,0 +1,56 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import Boids from '../components/Boids.astro';
+import BlogCard from '../components/BlogCard.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import Footer from '../components/Footer.astro';
+
+const latestPost = {
+  title: 'Building a Game Engine from Scratch',
+  date: '2026-04-20',
+  excerpt: 'After months of tinkering with graphics pipelines, entity-component systems, and physics simulations, I finally have something worth sharing. Here\'s what I learned building a game engine from the ground up...',
+  slug: 'building-a-game-engine-from-scratch',
+  href: '/blog/building-a-game-engine-from-scratch'
+};
+
+const projects = [
+  {
+    id: 'sph-fluid',
+    title: 'SPH Fluid Simulation',
+    subtitle: 'Realtime particle-based fluid simulation',
+    description: 'A realtime Smoothed Particle Hydrodynamics (SPH) fluid simulation built with. Simulates particles with pressure forces, viscosity, and surface tension.',
+    tech: ['C', 'OogaBooga Engine', 'DX11'],
+    link: 'https://github.com/TruWill99',
+    video: '/',
+    openSource: true,
+    buttons: [
+      { label: 'GitHub', url: 'https://github.com/TruWill99', type: 'ghost' }
+    ]
+  },
+];
+---
+
+<Layout title="TruWill | Portfolio">
+  <main class="page" id="top">
+    <Boids />
+
+    <div class="shell">
+      <Header />
+      <Hero />
+
+      <section class="section" id="projects" aria-labelledby="projects-title">
+        <div class="grid" role="list">
+          <BlogCard {...latestPost} />
+
+          {projects.map((p) => (
+            <ProjectCard {...p} />
+          ))}
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  </main>
+</Layout>

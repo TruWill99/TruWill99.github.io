@@ -1,0 +1,72 @@
+<header class="site-header">
+  <div class="site-header__inner">
+    <button class="site-header__menu" type="button" aria-expanded="false" aria-controls="site-navigation">Menu</button>
+    <nav id="site-navigation" class="site-nav" aria-label="Primary">
+      <ul>
+        <li><a href="/">Projects</a></li>
+        <li><a href="/blog">Blog</a></li>
+        <li><a href="https://github.com/TruWill99" target="_blank" rel="external noreferrer">GitHub</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    background: var(--tokyo-bg);
+    z-index: 100;
+  }
+  .site-header--scrolled {
+    backdrop-filter: blur(10px);
+    background: rgba(26, 27, 38, 0.8);
+  }
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+  .site-header__menu {
+    display: none;
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .site-header__menu:hover {
+    border-color: var(--text-accent);
+    color: var(--text-accent);
+  }
+  .site-nav {
+    margin-left: auto;
+  }
+  .site-nav ul {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .site-nav a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.16s ease;
+  }
+  .site-nav a:hover {
+    color: var(--text-accent);
+    text-decoration: underline;
+  }
+  @media (max-width: 640px) {
+    .site-header__menu { display: block; }
+    .site-nav ul { display: none; }
+  }
+</style>

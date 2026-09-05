@@ -1,0 +1,210 @@
+---
+export interface Props {
+  title: string;
+  date: string;
+  description?: string;
+  ogImage?: string;
+}
+const { title, date } = Astro.props;
+---
+<style is:global>
+  @import '../styles/global.css';
+
+  .blog-post {
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: clamp(1.25rem, 4vw, 3rem);
+    padding-top: clamp(1.5rem, 4vw, 3rem);
+    color: var(--text-secondary);
+    font-family: var(--font-jetbrains), 'JetBrains Mono Variable', monospace;
+    background: var(--bg-body);
+  }
+
+  .blog-post__back { margin: 0; }
+  .blog-post__back a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+  .blog-post__back a:hover,
+  .blog-post__back a:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    color: var(--text-accent);
+  }
+
+  .blog-post__header {
+    margin-top: 0.9rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .blog-post__header h1 {
+    margin: 0;
+    font-size: clamp(1.4rem, 2.5vw, 2rem);
+    line-height: 1.35;
+    color: var(--text-primary);
+  }
+  .blog-post__header p {
+    margin: 0.5rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+  }
+
+  .blog-post__content {
+    margin-top: 1.25rem;
+    line-height: 1.75;
+    font-size: 1rem;
+    color: var(--text-secondary);
+  }
+  .blog-post__content h1,
+  .blog-post__content h2,
+  .blog-post__content h3,
+  .blog-post__content h4,
+  .blog-post__content h5,
+  .blog-post__content h6 {
+    margin: 1.55rem 0 0.55rem;
+    line-height: 1.35;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .blog-post__content h1 {
+    margin-top: 2.2rem;
+    font-size: clamp(1.45rem, 2.4vw, 1.95rem);
+  }
+  .blog-post__content h2 {
+    margin-top: 2rem;
+    padding-bottom: 0.35rem;
+    font-size: clamp(1.25rem, 2vw, 1.5rem);
+    border-bottom: 1px solid var(--border-color);
+  }
+  .blog-post__content h3 {
+    margin-top: 1.8rem;
+    font-size: clamp(1.1rem, 1.6vw, 1.28rem);
+    font-weight: 680;
+  }
+  .blog-post__content p { margin: 0.9rem 0; }
+  .blog-post__content a {
+    color: var(--text-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .blog-post__content a:hover {
+    color: var(--accent-hover);
+  }
+  .blog-post__content ul,
+  .blog-post__content ol {
+    margin: 0.9rem 0;
+    padding-left: 1.5rem;
+  }
+  .blog-post__content ul { list-style: disc; }
+  .blog-post__content ol { list-style: decimal; }
+  .blog-post__content li { margin: 0.25rem 0; }
+
+  .blog-post__content code {
+    font-family: 'JetBrains Mono Variable', monospace;
+    background: var(--tokyo-bg);
+    color: var(--text-accent);
+    padding: 0.08rem 0.35rem;
+    border-radius: 4px;
+  }
+  .blog-post__content pre {
+    overflow-x: auto;
+    padding: 0.85rem 1rem;
+    background: var(--tokyo-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+  }
+  .blog-post__content pre code {
+    padding: 0;
+    background: transparent;
+    color: var(--text-secondary);
+  }
+  .blog-post__content blockquote {
+    margin: 1rem 0;
+    padding-left: 0.9rem;
+    border-left: 2px solid var(--border-color);
+    color: var(--text-muted);
+  }
+  .blog-post__content img {
+    display: block;
+    max-width: min(100%, 42rem);
+    height: auto;
+    margin: 1.5rem auto;
+    border-radius: 4px;
+  }
+
+  .post-nav {
+    margin-top: clamp(1.75rem, 4vw, 2.5rem);
+    margin-bottom: 0.6rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  .post-nav__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0;
+    border: none;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.94rem;
+    background: none;
+    cursor: pointer;
+  }
+  .post-nav__link--next {
+    justify-self: end;
+    justify-content: flex-end;
+    margin-left: auto;
+  }
+  .post-nav__link:hover,
+  .post-nav__link:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    color: var(--text-accent);
+  }
+  .post-nav__link:focus-visible {
+    outline: 2px solid var(--text-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+</style>
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <article class="blog-post">
+      <!-- Back link -->
+      <div class="blog-post__back">
+        <a href="/blog">← Back to blog</a>
+      </div>
+
+      <!-- Header -->
+      <header class="blog-post__header">
+        <h1>{title}</h1>
+        <p>{date}</p>
+      </header>
+
+      <!-- Content -->
+      <div class="blog-post__content">
+        <slot />
+      </div>
+
+      <!-- Post navigation -->
+      <nav class="post-nav">
+        <a class="post-nav__link" href="/blog">
+          ← All posts
+        </a>
+        <a class="post-nav__link post-nav__link--next" href="/blog">
+          Next post →
+        </a>
+      </nav>
+    </article>
+  </body>
+</html>

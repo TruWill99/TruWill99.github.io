@@ -1,0 +1,67 @@
+---
+const props = {
+  credentials: 'B.Sc. Computer Science | Game Developer & Graphics Programmer',
+  githubUsername: 'TruWill99',
+};
+---
+
+<footer class="footer" id="contact">
+  <div class="footer__inner">
+    <span>{props.credentials}</span>
+    <span class="footer__sep" aria-hidden="true">·</span>
+    <a class="link" href={`https://github.com/${props.githubUsername}`} target="_blank" rel="external noreferrer">
+      GitHub: <span class="link__mono"><strong>@{props.githubUsername}</strong></span>
+    </a>
+    <span class="footer__sep" aria-hidden="true">·</span>
+    <button class="link email-btn">email: <span class="link__mono"><strong>me [at] yourdomain (dot) dev</strong></span></button>
+    <span class="footer__sep" aria-hidden="true">·</span>
+    <a href="#top" class="link">Back to top</a>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    margin-top: 4rem;
+    padding: 2rem 0;
+    border-top: 1px solid var(--border-color);
+  }
+  .footer__inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .footer__sep {
+    color: var(--border-color);
+  }
+  .link {
+    color: var(--text-muted);
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font: inherit;
+  }
+  .link:hover {
+    color: var(--text-accent);
+  }
+  .link__mono {
+    font-family: 'JetBrains Mono Variable', monospace;
+  }
+  .email-btn {
+    background: none;
+    border: none;
+    font: inherit;
+    cursor: pointer;
+  }
+  @media (max-width: 640px) {
+    .footer__inner {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .footer__sep { display: none; }
+  }
+</style>

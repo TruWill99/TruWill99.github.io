@@ -1,0 +1,478 @@
+<div class="eeg-background">
+  <canvas id="water-canvas"></canvas>
+</div>
+
+<style>
+  .eeg-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+    background-color: var(--tokyo-bg);
+  }
+  #water-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>
+
+<script>
+  const container = document.querySelector('.eeg-background');
+  const waterCanvas = document.getElementById('water-canvas');
+
+  const boidsCanvas = document.createElement('canvas');
+  const ctx = boidsCanvas.getContext('2d', { alpha: true });
+  let width, height;
+  let boids = [];
+  let dpr = 1;
+
+  let accentColor = '#bb9af7';
+  let leaderColor = '#e0af68';
+  let accentRGB = { r: 187, g: 154, b: 247 };
+
+  let boidPath = null;
+  let cachedSize = 0;
+
+  function updateBoidPath(size) {
+    if (boidPath && cachedSize === size) return;
+    cachedSize = size;
+    boidPath = new Path2D();
+    boidPath.moveTo(size * 2, 0);
+    boidPath.lineTo(-size * 1.5, -size);
+    boidPath.lineTo(-size * 0.5, 0);
+    boidPath.lineTo(-size * 1.5, size);
+    boidPath.closePath();
+  }
+
+  function updateColors() {
+    const root = document.documentElement;
+    const computed = getComputedStyle(root);
+    accentColor = computed.getPropertyValue('--text-accent').trim() || '#bb9af7';
+    leaderColor = computed.getPropertyValue('--tokyo-yellow').trim() || '#e0af68';
+    
+    const tempEl = document.createElement('div');
+    tempEl.style.color = accentColor;
+    tempEl.style.display = 'none';
+    document.body.appendChild(tempEl);
+    const computedColor = getComputedStyle(tempEl).color;
+    document.body.removeChild(tempEl);
+    const rgbMatch = computedColor.match(/\d+/g);
+    if (rgbMatch) {
+      accentRGB.r = parseInt(rgbMatch[0]);
+      accentRGB.g = parseInt(rgbMatch[1]);
+      accentRGB.b = parseInt(rgbMatch[2]);
+    }
+  }
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    width = window.innerWidth;
+    height = window.innerHeight;
+    
+    const displayWidth = container.clientWidth || width;
+    const displayHeight = container.clientHeight || height;
+
+    boidsCanvas.width = displayWidth * dpr;
+    boidsCanvas.height = displayHeight * dpr;
+    boidsCanvas.style.width = displayWidth + 'px';
+    boidsCanvas.style.height = displayHeight + 'px';
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+
+    waterCanvas.width = displayWidth * dpr;
+    waterCanvas.height = displayHeight * dpr;
+    waterCanvas.style.width = displayWidth + 'px';
+    waterCanvas.style.height = displayHeight + 'px';
+
+    initBoids();
+    setupWebGL(displayWidth, displayHeight);
+  }
+
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(resize, 150);
+  });
+
+  class Boid {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = Math.random() * height;
+      this.vx = (Math.random() - 0.5) * 1.5;
+      this.vy = (Math.random() - 0.5) * 1.5;
+      this.size = 2.5 + Math.random() * 2.5;
+      this.maxSpeed = 1.8 + Math.random() * 0.8;
+      this.perceptionRadius = 80 + Math.random() * 40;
+      this.isLeader = Math.random() < 0.05;
+      this.leaderAngle = Math.random() * Math.PI * 2;
+      this.leaderChangeTimer = 0;
+      this.leaderChangeThreshold = 300 + Math.random() * 200;
+    }
+
+    flock(boids) {
+      let alignX = 0, alignY = 0;
+      let cohesionX = 0, cohesionY = 0;
+      let separationX = 0, separationY = 0;
+      let count = 0;
+      let leaderAttractionX = 0, leaderAttractionY = 0;
+      let leaderSeparationX = 0, leaderSeparationY = 0;
+      let leaderCount = 0;
+      const perceptionRadiusSq = this.perceptionRadius * this.perceptionRadius;
+
+      for (let i = 0; i < boids.length; i++) {
+        const other = boids[i];
+        if (other === this) continue;
+        const dx = other.x - this.x;
+        const dy = other.y - this.y;
+        const distSq = dx * dx + dy * dy;
+        if (distSq > 0 && distSq < perceptionRadiusSq) {
+          const dist = Math.sqrt(distSq);
+          if (other.isLeader && !this.isLeader) {
+            const attractionStrength = 0.15;
+            leaderAttractionX += (dx / dist) * attractionStrength;
+            leaderAttractionY += (dy / dist) * attractionStrength;
+            const alignStrength = 0.10;
+            leaderAttractionX += other.vx * alignStrength;
+            leaderAttractionY += other.vy * alignStrength;
+            if (dist < 40) {
+              const pushForce = (40 - dist) / 40;
+              leaderSeparationX -= (dx / dist) * pushForce * 1.5;
+              leaderSeparationY -= (dy / dist) * pushForce * 1.5;
+            }
+            leaderCount++;
+          } else if (this.isLeader && !other.isLeader) {
+            alignX += other.vx;
+            alignY += other.vy;
+            cohesionX += other.x;
+            cohesionY += other.y;
+            if (dist < 40) {
+              const pushForce = (40 - dist) / 40;
+              separationX -= (dx / dist) * pushForce * 3.0;
+              separationY -= (dy / dist) * pushForce * 3.0;
+            }
+            count++;
+          } else {
+            alignX += other.vx;
+            alignY += other.vy;
+            cohesionX += other.x;
+            cohesionY += other.y;
+            if (dist < 45) {
+              const pushForce = (45 - dist) / 45;
+              separationX -= (dx / dist) * pushForce * 2.0;
+              separationY -= (dy / dist) * pushForce * 2.0;
+            }
+            count++;
+          }
+        }
+      }
+      if (leaderCount > 0) {
+        this.vx += leaderAttractionX / leaderCount;
+        this.vy += leaderAttractionY / leaderCount;
+        this.vx += leaderSeparationX;
+        this.vy += leaderSeparationY;
+      }
+      if (count > 0) {
+        alignX /= count;
+        alignY /= count;
+        const alignLen = Math.sqrt(alignX * alignX + alignY * alignY);
+        if (alignLen > 0) {
+          alignX = (alignX / alignLen) * 0.02;
+          alignY = (alignY / alignLen) * 0.02;
+        }
+        cohesionX /= count;
+        cohesionY /= count;
+        const cohDx = cohesionX - this.x;
+        const cohDy = cohesionY - this.y;
+        const cohLen = Math.sqrt(cohDx * cohDx + cohDy * cohDy);
+        if (cohLen > 0) {
+          cohesionX = (cohDx / cohLen) * 0.008;
+          cohesionY = (cohDy / cohLen) * 0.008;
+        }
+        if (this.isLeader) {
+          alignX *= 0.6;
+          alignY *= 0.6;
+          cohesionX *= 0.5;
+          cohesionY *= 0.5;
+          separationX *= 0.8;
+          separationY *= 0.8;
+        }
+        this.vx += alignX + cohesionX + separationX * 0.1;
+        this.vy += alignY + cohesionY + separationY * 0.1;
+      }
+      if (this.isLeader) {
+        this.leaderChangeTimer++;
+        if (this.leaderChangeTimer > this.leaderChangeThreshold) {
+          this.leaderAngle += (Math.random() - 0.5) * 1.0;
+          this.leaderChangeTimer = 0;
+          this.leaderChangeThreshold = 300 + Math.random() * 200;
+        }
+        this.vx += Math.cos(this.leaderAngle) * 0.025;
+        this.vy += Math.sin(this.leaderAngle) * 0.025;
+      }
+      const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+      if (speed > this.maxSpeed) {
+        this.vx = (this.vx / speed) * this.maxSpeed;
+        this.vy = (this.vy / speed) * this.maxSpeed;
+      }
+      this.x += this.vx;
+      this.y += this.vy;
+      if (this.x < -20) this.x = width + 20;
+      if (this.x > width + 20) this.x = -20;
+      if (this.y < -20) this.y = height + 20;
+      if (this.y > height + 20) this.y = -20;
+    }
+
+    draw() {
+      const angle = Math.atan2(this.vy, this.vx);
+      const color = this.isLeader ? leaderColor : accentColor;
+      updateBoidPath(this.size);
+      const alpha = 0.4 + (this.size / 5) * 0.3;
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(angle);
+      ctx.fillStyle = color;
+      ctx.globalAlpha = alpha;
+      ctx.fill(boidPath);
+      ctx.restore();
+    }
+  }
+
+  function initBoids() {
+    const area = width * height;
+    const targetCount = Math.min(Math.floor(area / 25000) + 30, 100);
+    if (boids.length < targetCount) {
+      for (let i = boids.length; i < targetCount; i++) {
+        boids.push(new Boid());
+      }
+    } else if (boids.length > targetCount) {
+      boids.splice(targetCount);
+    }
+  }
+
+  let gl, program, uniformLocations;
+  let texture;
+
+  function createShader(gl, source, type) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(shader));
+      gl.deleteShader(shader);
+      return null;
+    }
+    return shader;
+  }
+
+  function createProgram(gl, vertexSource, fragmentSource) {
+    const vertexShader = createShader(gl, vertexSource, gl.VERTEX_SHADER);
+    const fragmentShader = createShader(gl, fragmentSource, gl.FRAGMENT_SHADER);
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    return program;
+  }
+
+  function setupWebGL(displayWidth, displayHeight) {
+    if (gl) {
+      gl.deleteProgram(program);
+      gl.deleteTexture(texture);
+    }
+
+    gl = waterCanvas.getContext('webgl2', { alpha: true, antialias: false, powerPreference: "high-performance" });
+    if (!gl) return;
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    const vsSource = `#version 300 es
+      layout (location = 0) in vec2 aPos;
+      out vec2 vUv;
+      void main() {
+        vUv = aPos * 0.5 + 0.5;
+        gl_Position = vec4(aPos, 0.0, 1.0);
+      }
+    `;
+
+    const fsSource = `#version 300 es
+      precision mediump float;
+      in vec2 vUv;
+      out vec4 FragColor;
+
+      uniform float uTime;
+      uniform vec2 uResolution;
+      uniform vec3 uWaterColor;
+      uniform float uIntensity;
+      uniform float uHighlightScale;
+      uniform sampler2D uScreenTexture;
+
+      const int MAX_RADIUS = 2;
+      const float HASHSCALE1 = 0.1031;
+      const vec3 HASHSCALE3 = vec3(0.1031, 0.1030, 0.0973);
+      const float RIPPLE_FREQ = 31.0;
+      const float RIPPLE_STRENGTH = 0.1;
+      const float HIGHLIGHT_POW = 2.1;
+
+      mat2 rotate2D(float r) {
+        return mat2(vec2(cos(r), sin(r)), vec2(-sin(r), cos(r)));
+      }
+
+      float hash12(vec2 p) {
+        vec3 p3 = fract(vec3(p.xyx) * HASHSCALE1);
+        p3 += dot(p3, p3.yzx + 19.19);
+        return fract((p3.x + p3.y) * p3.z);
+      }
+
+      vec2 hash22(vec2 p) {
+        vec3 p3 = fract(vec3(p.xyx) * HASHSCALE3);
+        p3 += dot(p3, p3.yzx + 19.19);
+        return fract((p3.xx + p3.yz) * p3.zy);
+      }
+
+      void main() {
+        vec2 uv = vUv;
+        vec2 aspect = vec2(uResolution.x / uResolution.y, 1.0);
+        vec2 uv_scaled = uv * 10.0 * aspect;
+        vec2 base_cell = floor(uv_scaled);
+        vec2 ripple_offset = vec2(0.0);
+
+        for (int j = -MAX_RADIUS; j <= MAX_RADIUS; ++j) {
+          for (int i = -MAX_RADIUS; i <= MAX_RADIUS; ++i) {
+            vec2 cell = base_cell + vec2(float(i), float(j));
+            if (fract(hash12(cell) * 123.456) < uIntensity) {
+              vec2 p = cell + hash22(cell);
+              float t = fract(0.3 * uTime + hash12(cell));
+              vec2 v = p - uv_scaled;
+              v.y *= 1.5;
+              float d = length(v) - (float(MAX_RADIUS) + 1.0) * t;
+              float h = 1e-3;
+              float d1 = d - h;
+              float d2 = d + h;
+              float p1 = sin(RIPPLE_FREQ * d1) * smoothstep(-0.6, -0.3, d1) * smoothstep(0.0, -0.3, d1);
+              float p2 = sin(RIPPLE_FREQ * d2) * smoothstep(-0.6, -0.3, d2) * smoothstep(0.0, -0.3, d2);
+              ripple_offset += 0.5 * normalize(v) * ((p2 - p1) / (2.0 * h) * pow(1.0 - t, 2.0));
+            }
+          }
+        }
+
+        ripple_offset /= 25.0;
+        ripple_offset *= RIPPLE_STRENGTH;
+
+        vec2 wave_offset = vec2(sin(uv.x * 10.0 + uTime), cos(uv.y * 10.0 + uTime)) * 0.005;
+        vec2 distortion = ripple_offset * uIntensity + wave_offset;
+
+        vec2 dx = dFdx(distortion);
+        vec2 dy = dFdy(distortion);
+        vec3 water_normal = normalize(vec3(-dx.x, -dy.y, 1.0));
+        vec3 light_dir = normalize(vec3(0.5, 0.5, 1.0));
+        float spec = pow(max(dot(water_normal, light_dir), 0.0), 32.0) * 5.0;
+
+        vec2 distorted_uv = uv + distortion;
+        vec4 screen_color = texture(uScreenTexture, distorted_uv);
+
+        vec2 wave_uv = (uv * uHighlightScale) + distortion;
+        vec2 wave_n = vec2(0.0);
+        vec2 wave_sum = vec2(0.0);
+        float S = 10.0;
+        mat2 rot = rotate2D(1.0);
+
+        for (float j = 0.0; j < 16.0; ++j) {
+          wave_uv *= rot;
+          wave_n *= rot;
+          vec2 q = wave_uv * S + j + wave_n + uTime;
+          wave_n += sin(q);
+          wave_sum += cos(q) / S;
+          S *= 1.25;
+        }
+
+        float wave_len = max(length(wave_sum), 0.001);
+        vec3 wave_highlight = vec3(1.0) * pow(max((wave_sum.x + wave_sum.y + 0.4) + 0.005 / wave_len, 0.0), HIGHLIGHT_POW);
+
+        float brightness = dot(wave_highlight, vec3(0.299, 0.587, 0.114));
+        float highlight_mask = smoothstep(1.2, 1.35, brightness);
+        
+        vec3 caustics = wave_highlight + spec * uWaterColor;
+        float caustic_alpha = highlight_mask * 0.7 + spec * 0.2;
+
+        vec3 final_rgb = mix(caustics, screen_color.rgb, step(0.01, screen_color.a));
+        float final_alpha = max(screen_color.a, caustic_alpha);
+
+        FragColor = vec4(final_rgb, final_alpha);
+      }
+    `;
+
+    program = createProgram(gl, vsSource, fsSource);
+    if (!program) return;
+
+    uniformLocations = {
+      uTime: gl.getUniformLocation(program, 'uTime'),
+      uResolution: gl.getUniformLocation(program, 'uResolution'),
+      uWaterColor: gl.getUniformLocation(program, 'uWaterColor'),
+      uIntensity: gl.getUniformLocation(program, 'uIntensity'),
+      uHighlightScale: gl.getUniformLocation(program, 'uHighlightScale'),
+      uScreenTexture: gl.getUniformLocation(program, 'uScreenTexture'),
+    };
+
+    const vertices = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
+    const vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+    const positionLocation = gl.getAttribLocation(program, 'aPos');
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+    texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    gl.viewport(0, 0, waterCanvas.width, waterCanvas.height);
+  }
+
+  function renderWater(time) {
+    if (!gl || !program) return;
+
+    ctx.clearRect(0, 0, width, height);
+    for (let i = 0; i < boids.length; i++) {
+      boids[i].flock(boids);
+      boids[i].draw();
+    }
+
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, boidsCanvas);
+
+    gl.useProgram(program);
+    gl.uniform1f(uniformLocations.uTime, time);
+    gl.uniform2f(uniformLocations.uResolution, waterCanvas.width, waterCanvas.height);
+
+    gl.uniform3f(uniformLocations.uWaterColor, accentRGB.r / 255, accentRGB.g / 255, accentRGB.b / 255);
+    gl.uniform1f(uniformLocations.uIntensity, 0.15);
+    gl.uniform1f(uniformLocations.uHighlightScale, 2.5);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.uniform1i(uniformLocations.uScreenTexture, 0);
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+
+  function animate(time) {
+    renderWater(time / 1000);
+    requestAnimationFrame(animate);
+  }
+
+  updateColors();
+  resize();
+  animate(performance.now());
+</script>
