@@ -1,7 +1,7 @@
 import { defineConfig, fontProviders } from "astro/config";
 
 export default defineConfig({
-  base: '/',
+  site: 'https://TruWill99.github.io',
   outDir: './dist',
   
   fonts: [
